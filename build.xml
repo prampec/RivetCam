@@ -1,0 +1,67 @@
+<project name="RivetCam" default="release">
+    <property name="buildDir" value="out"/>
+    <property name="classes" value="${buildDir}/classes"/>
+    <property name="extClasses" value="${buildDir}/ext-classes"/>
+
+    <path id="classpath">
+        <fileset dir="lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="init" description="Initializes environment for build.">
+        <mkdir dir="${classes}"/>
+    </target>
+
+    <target name="clean" description="Removes build folder.">
+        <delete dir="${buildDir}"/>
+    </target>
+
+    <target name="compile" description="Compiles the source code." depends="init">
+        <javac destdir="${classes}" source="1.8" classpathref="classpath" encoding="UTF-8">
+            <src path="src"/>
+            <include name="**/*.java"/>
+        </javac>
+    </target>
+
+    <target name="jar" description="Creates ${ant.project.name} jar package" depends="compile">
+        <mkdir dir="${extClasses}"/>
+        <unjar dest="${extClasses}" overwrite="no">
+            <fileset dir="lib">
+                <include name="*.jar"/>
+            </fileset>
+        </unjar>
+
+        <jar destfile="${buildDir}/${ant.project.name}.jar" duplicate="preserve">
+            <fileset dir="${classes}" includes="**/*"/>
+            <fileset dir="${extClasses}" includes="**/*">
+                <exclude name="META-INF/SUN_MICR.*"/>
+                <exclude name="META-INF/BCKEY.*"/>
+            </fileset>
+            <manifest>
+                <attribute name="Main-Class" value="com.prampec.rivetcam.MainFrame"/>
+            </manifest>
+        </jar>
+        <delete dir="${classes}"/>
+        <delete dir="${extClasses}"/>
+    </target>
+
+    <target name="package" description="Creates ZIP archive">
+        <tar destfile="${buildDir}/${ant.project.name}.tar.bz2" compression="bzip2">
+            <fileset dir="${buildDir}">
+                <include name="${ant.project.name}.jar"/>
+            </fileset>
+            <fileset dir="lib/native">
+                <include name="**/*"/>
+            </fileset>
+            <fileset dir=".">
+                <include name="setup-sample.properties"/>
+            </fileset>
+            <tarfileset dir="src/resources" filemode="755">
+                <include name="start*.sh"/>
+            </tarfileset>
+        </tar>
+    </target>
+
+    <target name="release" depends="clean, jar, package"/>
+</project>
