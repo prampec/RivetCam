@@ -230,4 +230,10 @@ public enum KeyEventWrapper {
     public int getKeyEvent() {
         return keyEvent;
     }
+
+
+    @Override
+    public String toString() {
+        return name().substring(3);
+    }
 }

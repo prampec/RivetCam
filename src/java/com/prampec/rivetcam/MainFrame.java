@@ -43,7 +43,16 @@ import java.util.Timer;
  * Created by kelemenb on 6/17/17.
  */
 public class MainFrame extends JFrame implements CaptureCallback {
+    public static final String[] KEY_INFO = {
+            "Esc - Quit", "L - Live view",
+            "Space - Capture", "P - Playback",
+            "Backspace - Remove", "Arrows - Prev/Next",
+            "O - Onion skin", "B - New batch",
+    };
+
     private int lastImagesCacheSize = 10;
+    private boolean keyInfoOn = false;
+
     private enum Mode {
         LIVE_VIEW,
         CAPTURING,
@@ -61,7 +70,7 @@ public class MainFrame extends JFrame implements CaptureCallback {
     private Date snapshotEffectTime;
     private int onion = 2;
     private FileManager fileManager;
-    private Map<String, Integer> controls;
+    private Map<String, Integer> savedControls;
     private int activePreviewImage = 0;
     private Mode mode = Mode.LIVE_VIEW;
     private ConfigurationManager configurationManager;
@@ -94,7 +103,6 @@ public class MainFrame extends JFrame implements CaptureCallback {
             device.setFullScreenWindow(dialog);
             dialog.pack();
             dialog.setVisible(true);
-            dialog.createNewBatch();
             while (dialog.isVisible()) {
                 try {
                     Thread.sleep(10);
@@ -135,7 +143,7 @@ public class MainFrame extends JFrame implements CaptureCallback {
 //        setModal(true);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
         this.setUndecorated(true);
-        setTitle("FullScreen Capture");
+        setTitle("RivetCam");
         cameraManager = new CameraManager(
                 configurationManager.videoDevice,
                 configurationManager.preserveList,
@@ -147,6 +155,17 @@ public class MainFrame extends JFrame implements CaptureCallback {
             @Override
             public void keyPressed(KeyEvent e) {
                 handleKeypressed(e);
+                if (e.getKeyCode() == KeyEvent.VK_K) {
+                    keyInfoOn = true;
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                super.keyReleased(e);
+                if (e.getKeyCode() == KeyEvent.VK_K) {
+                    keyInfoOn = false;
+                }
             }
         });
 
@@ -166,7 +185,14 @@ public class MainFrame extends JFrame implements CaptureCallback {
                 imageContainer.repaint();
             }
         });
+    }
 
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        if (visible) {
+            onScreenDisplay.add("welcome", "Welcome! Press 'K' form keys info.");
+        }
     }
 
     private void handleKeypressed(KeyEvent e) {
@@ -242,6 +268,11 @@ public class MainFrame extends JFrame implements CaptureCallback {
         }, 0, 1000/configurationManager.playbackFps);
     }
 
+    private void createNewBatchIfNone() {
+        if (!fileManager.hasBatch()) {
+            createNewBatch();
+        }
+    }
     private void createNewBatch() {
         String batchName = fileManager.createNewWorkingDirectory();
         onScreenDisplay.add("New batch: " + batchName);
@@ -250,19 +281,46 @@ public class MainFrame extends JFrame implements CaptureCallback {
     }
 
     private void paintOsd(Graphics g) {
+        int fontSize = configurationManager.osdFontSize;
+        g.setFont(new Font("Helvetia", Font.PLAIN, fontSize));
+
         List<String> messages = onScreenDisplay.messagesToDisplay();
         if (messages != null) {
-            int fontSize = configurationManager.osdFontSize;
-            g.setFont(new Font("Helvetia", Font.PLAIN, fontSize));
             int y = 2 * fontSize;
             for (String message : messages) {
-                g.setColor(Color.black);
-                g.drawString(message, fontSize + 2, y + 2);
-                g.setColor(Color.magenta);
-                g.drawString(message, fontSize, y);
+                drawText(g, fontSize, y, message, Color.magenta, 0);
                 y += fontSize + fontSize /2;
             }
         }
+        if (keyInfoOn) {
+            int y = 2 * fontSize;
+            Color blue = new Color(130, 130, 255);
+            for (int i = 0; i < KEY_INFO.length; i += 2) {
+                String message1 = KEY_INFO[i];
+                String message2 = KEY_INFO[i + 1];
+                drawText(g, fontSize, y, message1,blue, 0);
+                drawText(g, fontSize, y, message2, blue, this.getWidth()/2);
+                y += fontSize + fontSize / 2;
+            }
+            for (ConfigurationManager.ControlKey controlKey : configurationManager.keyList) {
+                String message = controlKey.dec + "/" + controlKey.inc + " - " + controlKey.name;
+                drawText(g, fontSize, y, message, blue, 0);
+                y += fontSize + fontSize / 2;
+            }
+        }
+    }
+
+    private void drawText(
+            Graphics g,
+            int fontSize,
+            int y,
+            String message,
+            Color textColor,
+            int xOffset) {
+        g.setColor(Color.black);
+        g.drawString(message, fontSize + 2 + xOffset, y + 2);
+        g.setColor(textColor);
+        g.drawString(message, fontSize + xOffset    , y);
     }
 
     private void showImage(Graphics g, BufferedImage image) {
@@ -295,19 +353,19 @@ public class MainFrame extends JFrame implements CaptureCallback {
         final boolean liveViewWasOn;
         if (cameraManager.isCapturing()) {
             liveViewWasOn = true;
-            controls = cameraManager.saveControls();
+            savedControls = cameraManager.saveControls();
             cameraManager.stop();
             snapshotEffectTime = new Date(new Date().getTime() + configurationManager.delayMsBeforeSnapshot);
         } else {
             snapshotEffectTime = new Date(new Date().getTime() + snapshotDelayMs);
-            controls = null;
+            savedControls = null;
             liveViewWasOn = false;
         }
 
         snapshotInProgress = true;
         cameraManager.startStill(this, configurationManager.stillImageResolution);
-        if (controls != null) {
-            cameraManager.loadControls(controls);
+        if (savedControls != null) {
+            cameraManager.loadControls(savedControls);
         }
         th = new Thread()
         {
@@ -324,11 +382,14 @@ public class MainFrame extends JFrame implements CaptureCallback {
 
                 if (liveViewWasOn) {
                     startCapture();
-                    cameraManager.loadControls(controls);
+                    cameraManager.loadControls(savedControls);
                     mode = Mode.LIVE_VIEW;
                 } else {
                     mode = Mode.PLAYBACK;
                     imageContainer.repaint();
+                }
+                if (configurationManager.enableBeep) {
+                    Toolkit.getDefaultToolkit().beep();
                 }
 
             }
@@ -341,7 +402,7 @@ public class MainFrame extends JFrame implements CaptureCallback {
         if (liveView) {
             startCapture();
         } else if (cameraManager.isCapturing()) {
-            controls = cameraManager.saveControls();
+            savedControls = cameraManager.saveControls();
             cameraManager.stop();
             activePreviewImage = 0;
         }
@@ -350,8 +411,8 @@ public class MainFrame extends JFrame implements CaptureCallback {
 
     private void startCapture() {
         cameraManager.start(this, configurationManager.liveViewResolution);
-        if (controls != null) {
-            cameraManager.loadControls(controls);
+        if (savedControls != null) {
+            cameraManager.loadControls(savedControls);
         }
     }
 
@@ -360,6 +421,7 @@ public class MainFrame extends JFrame implements CaptureCallback {
         if (snapshotInProgress) {
             if (new Date().after(snapshotEffectTime)) {
                 try {
+                    createNewBatchIfNone();
                     File outputfile = fileManager.getNextFile();
                     ImageIO.write(bufferedImage, "jpg", outputfile);
                     lastImagesCache.add(bufferedImage);

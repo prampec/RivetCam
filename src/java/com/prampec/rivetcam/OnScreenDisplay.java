@@ -32,7 +32,7 @@ import java.util.*;
  */
 public class OnScreenDisplay {
     public static final int QUEUE_LENGTH = 5;
-    public static final int MESSAGE_ON_SCREEN_MS = 1800;
+    public static final int MESSAGE_ON_SCREEN_MS = 2200;
 
     protected HashMap<String, String> messages = new HashMap<>();
     protected LinkedList<String> keys = new LinkedList<>();

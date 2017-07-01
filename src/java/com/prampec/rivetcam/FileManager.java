@@ -114,4 +114,8 @@ public class FileManager {
     public String formatName(File file) {
         return activeWorkingDirectory.getName() + "/" + file.getName();
     }
+
+    public boolean hasBatch() {
+        return activeWorkingDirectory != null;
+    }
 }

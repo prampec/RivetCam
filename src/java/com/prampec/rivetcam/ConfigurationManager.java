@@ -57,6 +57,7 @@ public class ConfigurationManager {
     int fileIndexDigits;
     String baseDirectoryPath;
     boolean restartFileIndexWithNewDirectory;
+    boolean enableBeep;
 
     public ConfigurationManager() {
         properties = new Properties();
@@ -85,7 +86,8 @@ public class ConfigurationManager {
         baseDirectoryPath = properties.getProperty("baseDirectoryPath", ".");
         restartFileIndexWithNewDirectory = Boolean.parseBoolean(
                 properties.getProperty("restartFileIndexWithNewDirectory", "True"));
-
+        enableBeep = Boolean.parseBoolean(
+                properties.getProperty("enableBeep", "True"));
     }
 
     private static Dimension parseDimension(String value) {
