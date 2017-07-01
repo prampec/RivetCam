@@ -191,7 +191,7 @@ public class MainFrame extends JFrame implements CaptureCallback {
     public void setVisible(boolean visible) {
         super.setVisible(visible);
         if (visible) {
-            onScreenDisplay.add("welcome", "Welcome! Press 'K' form keys info.");
+            onScreenDisplay.add("welcome", "Welcome! Press 'K' for keys info.");
         }
     }
 

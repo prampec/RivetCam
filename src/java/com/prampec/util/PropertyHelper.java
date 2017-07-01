@@ -25,6 +25,7 @@
 package com.prampec.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -38,6 +39,9 @@ public class PropertyHelper {
             String subject,
             PropertyReader<T> propertyReader) {
         String idsString = properties.getProperty(subject);
+        if (idsString == null) {
+            return Collections.emptyList();
+        }
         String[] ids = idsString.split("\\w*,\\w*");
         List<T> result = new ArrayList<>(ids.length);
         for (String id : ids) {

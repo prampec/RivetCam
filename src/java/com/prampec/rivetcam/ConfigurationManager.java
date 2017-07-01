@@ -64,7 +64,7 @@ public class ConfigurationManager {
         try {
             properties.load(new FileInputStream("setup.properties"));
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error loading properties: " + e.getMessage());
         }
         videoDevice = properties.getProperty("videoDevice", "/dev/video0");
         playbackFps = Integer.parseInt(properties.getProperty("playbackFps", "20"));
