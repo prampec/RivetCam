@@ -18,7 +18,7 @@
     </target>
 
     <target name="compile" description="Compiles the source code." depends="init">
-        <javac destdir="${classes}" source="1.8" classpathref="classpath" encoding="UTF-8">
+        <javac destdir="${classes}" source="1.8" classpathref="classpath" encoding="UTF-8" debug="true">
             <src path="src"/>
             <include name="**/*.java"/>
         </javac>

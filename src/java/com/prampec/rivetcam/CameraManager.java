@@ -137,7 +137,14 @@ public class CameraManager {
         for (ConfigurationManager.ManualControl manualControl : manualList) {
             try {
                 Control control = controlList.getControl(manualControl.name);
-                control.setValue(Integer.parseInt(manualControl.value));
+                if (control != null) {
+                    control.setValue(Integer.parseInt(manualControl.value));
+                }
+                else {
+                    System.err.println(
+                            "'" + manualControl.name + "' is defined for manual control, but camera '"
+                            + getCameraName() + "' does not provide this control. Try running diagnostics!");
+                }
             } catch (ControlException e) {
                 e.printStackTrace();
             }
@@ -165,6 +172,12 @@ public class CameraManager {
         try {
             for (String controlName : save.keySet()) {
                 Control control = controlList.getControl(controlName);
+                if (control == null) {
+                    System.err.println(
+                            "'" + controlName + "' is defined as a persistable control, but camera '"
+                                    + getCameraName() + "' does not provide this control. Try running diagnostics!");
+                    continue;
+                }
                 // TODO: handle non-integer values
                 Integer value = save.get(controlName);
                 {
@@ -185,14 +198,27 @@ public class CameraManager {
     private void addControlValueToMap(
             ControlList controlList, Map<String, Integer> controlsToSave, String controlName) throws ControlException {
         Control control = controlList.getControl(controlName);
-        // TODO: handle non-integer values
-        controlsToSave.put(controlName, control.getValue());
+        if (control != null) {
+            // TODO: handle non-integer values
+            controlsToSave.put(controlName, control.getValue());
+        }
+        else {
+            System.err.println(
+                    "'" + controlName + "' is defined as a persistable control, but camera '"
+                            + getCameraName() + "' does not provide this control. Try running diagnostics!");
+        }
     }
 
     public int setControl(String controlName, int increment) {
         ControlList controlList = videoDevice.getControlList();
         try {
             Control control = controlList.getControl(controlName);
+            if (control == null) {
+                System.err.println(
+                        "Trying to set control value for '" + controlName + "', but camera '"
+                                + getCameraName() + "' does not provide this control. Try running diagnostics!");
+                return -1;
+            }
             // TODO: handle non-integer values
             int value = control.getValue();
             value += increment * control.getStepValue();
@@ -207,5 +233,9 @@ public class CameraManager {
             e.printStackTrace();
             return -1;
         }
+    }
+
+    public String getCameraName() {
+        return di.getName();
     }
 }

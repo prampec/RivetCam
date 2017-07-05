@@ -191,7 +191,10 @@ public class MainFrame extends JFrame implements CaptureCallback {
     public void setVisible(boolean visible) {
         super.setVisible(visible);
         if (visible) {
-            onScreenDisplay.add("welcome", "Welcome! Press 'K' for keys info.");
+            String cameraName = cameraManager.getCameraName();
+            onScreenDisplay.add(
+                    "welcome",
+                    "Connected to camera '" + cameraName + "'. Press 'K' for keys info.");
         }
     }
 
