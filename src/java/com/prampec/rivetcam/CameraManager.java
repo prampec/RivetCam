@@ -51,6 +51,7 @@ public class CameraManager {
             String deviceFile,
             List<String> preserve,
             List<ConfigurationManager.ManualControl> manualList) {
+        System.out.println("Opening video device: " + deviceFile);
         videoDevice = getVideoDevice(new File(deviceFile));
         this.preserve = preserve;
         this.manualList = manualList;
@@ -59,6 +60,7 @@ public class CameraManager {
         } catch (V4L4JException e) {
             throw new IllegalStateException("Cannot get video device information.", e);
         }
+        System.out.println("Video device name: " + di.getName());
     }
 
     private static VideoDevice getVideoDevice(File file) {
