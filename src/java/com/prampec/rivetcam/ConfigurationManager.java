@@ -85,7 +85,7 @@ public class ConfigurationManager {
         fileIndexDigits = Integer.parseInt(properties.getProperty("fileIndexDigits", "4"));
         baseDirectoryPath = properties.getProperty("baseDirectoryPath", ".");
         restartFileIndexWithNewDirectory = Boolean.parseBoolean(
-                properties.getProperty("restartFileIndexWithNewDirectory", "True"));
+                properties.getProperty("restartFileIndexWithNewDirectory", "False"));
         enableBeep = Boolean.parseBoolean(
                 properties.getProperty("enableBeep", "True"));
     }
