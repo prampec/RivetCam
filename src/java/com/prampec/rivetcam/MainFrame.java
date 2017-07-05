@@ -74,6 +74,7 @@ public class MainFrame extends JFrame implements CaptureCallback {
     private int activePreviewImage = 0;
     private Mode mode = Mode.LIVE_VIEW;
     private ConfigurationManager configurationManager;
+    private Timer welcomeTimer = new Timer();
 
     private LinkedList<BufferedImage> lastImagesCache = new LinkedList<BufferedImage>() {
         @Override
@@ -191,8 +192,7 @@ public class MainFrame extends JFrame implements CaptureCallback {
     public void setVisible(boolean visible) {
         super.setVisible(visible);
         if (visible) {
-            final Timer tm = new Timer();
-            tm.scheduleAtFixedRate(new TimerTask() {
+            welcomeTimer.scheduleAtFixedRate(new TimerTask() {
                 int count = 0;
 
                 @Override
@@ -215,7 +215,7 @@ public class MainFrame extends JFrame implements CaptureCallback {
                     }
                     count += 1;
                     if (count > 2) {
-                        tm.cancel();
+                        welcomeTimer.cancel();
                     }
                 }
             }, 1000, 3000);
@@ -473,6 +473,7 @@ public class MainFrame extends JFrame implements CaptureCallback {
 
     @Override
     public void dispose() {
+        welcomeTimer.cancel();
         onScreenDisplay.dispose();
         if (cameraManager.isCapturing()) {
             cameraManager.stop();

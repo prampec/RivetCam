@@ -24,6 +24,7 @@
 
 package com.prampec.rivetcam;
 
+import au.edu.jcu.v4l4j.DeviceInfo;
 import com.prampec.util.KeyEventWrapper;
 import com.prampec.util.PropertyHelper;
 
@@ -31,6 +32,7 @@ import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -39,7 +41,7 @@ import java.util.Properties;
  */
 public class ConfigurationManager {
     private final Properties properties;
-    final String videoDevice;
+    String videoDevice;
     List<ManualControl> manualList;
     List<String> preserveList;
     List<ControlKey> keyList;
@@ -66,7 +68,20 @@ public class ConfigurationManager {
         } catch (IOException e) {
             System.err.println("Error loading properties: " + e.getMessage());
         }
-        videoDevice = properties.getProperty("videoDevice", "/dev/video0");
+        videoDevice = properties.getProperty("videoDevice");
+        String videoDeviceByName = properties.getProperty("videoDeviceByName");
+        if ((videoDevice != null) && (videoDeviceByName != null)) {
+            System.err.println(
+                    "Configuration warning! Both videoDevice and videoDeviceByName are specified. Only the videoDevice will be used.");
+        }
+        if (videoDevice == null) {
+            if (videoDeviceByName != null) {
+                videoDevice = getVideoDeviceByName(videoDeviceByName);
+            }
+            else {
+                videoDevice = "/dev/video0";
+            }
+        }
         playbackFps = Integer.parseInt(properties.getProperty("playbackFps", "20"));
         osdFontSize = Integer.parseInt(properties.getProperty("osdFontSize", "50"));
         liveViewResolution = parseDimension(properties.getProperty("liveView.resolution", "960x544"));
@@ -88,6 +103,24 @@ public class ConfigurationManager {
                 properties.getProperty("restartFileIndexWithNewDirectory", "False"));
         enableBeep = Boolean.parseBoolean(
                 properties.getProperty("enableBeep", "True"));
+    }
+
+    private String getVideoDeviceByName(String videoDeviceName) {
+        if ((videoDeviceName == null) || (videoDeviceName.isEmpty())) {
+            return null;
+        }
+        Map<String, DeviceInfo> devices = CameraTools.listV4KDevicesWithInfo();
+        if (devices != null) {
+            for (DeviceInfo deviceInfo : devices.values()) {
+                if (videoDeviceName.equals(deviceInfo.getName())) {
+                    return deviceInfo.getDeviceFile();
+                }
+            }
+        }
+        System.err.println(
+                "videoDeviceByName configuration was set, but no device found with name: "
+                        + videoDeviceName);
+        return null;
     }
 
     private static Dimension parseDimension(String value) {
