@@ -20,4 +20,4 @@ Key features are:
 - Resolution of the live-view can be set to match your screen resolution and have better fps.
 - Open source with Java language.
 
-Project documentation page is: https://doc.csipa.hu/?page_id=415
+Project documentation page is: https://sharedinventions.com/rivetcam
