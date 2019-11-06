@@ -60,6 +60,7 @@ public class ConfigurationManager {
     String baseDirectoryPath;
     boolean restartFileIndexWithNewDirectory;
     boolean enableBeep;
+    Dimension fixedWindowSize;
 
     public ConfigurationManager() {
         properties = new Properties();
@@ -82,6 +83,7 @@ public class ConfigurationManager {
                 videoDevice = "/dev/video0";
             }
         }
+        fixedWindowSize = parseDimension(properties.getProperty("fixedWindowSize"));
         playbackFps = Integer.parseInt(properties.getProperty("playbackFps", "20"));
         osdFontSize = Integer.parseInt(properties.getProperty("osdFontSize", "50"));
         liveViewResolution = parseDimension(properties.getProperty("liveView.resolution", "960x544"));
@@ -124,6 +126,10 @@ public class ConfigurationManager {
     }
 
     private static Dimension parseDimension(String value) {
+        if (value == null)
+        {
+            return null;
+        }
         String[] split = value.split("x");
         Dimension d = new Dimension(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
         return d;
