@@ -61,6 +61,7 @@ public class ConfigurationManager {
     boolean restartFileIndexWithNewDirectory;
     boolean enableBeep;
     Dimension fixedWindowSize;
+    boolean returnToLiveViewAfterPlayback;
 
     public ConfigurationManager() {
         properties = new Properties();
@@ -105,6 +106,8 @@ public class ConfigurationManager {
                 properties.getProperty("restartFileIndexWithNewDirectory", "False"));
         enableBeep = Boolean.parseBoolean(
                 properties.getProperty("enableBeep", "True"));
+        enableBeep = Boolean.parseBoolean(
+                properties.getProperty("returnToLiveViewAfterPlayback", "False"));
     }
 
     private String getVideoDeviceByName(String videoDeviceName) {
@@ -137,42 +140,31 @@ public class ConfigurationManager {
 
     protected void readManualList() {
         manualList = PropertyHelper.readList(
-                properties, "manual",
-                new PropertyHelper.PropertyReader<ManualControl>() {
-            @Override
-            public ManualControl readItem(Properties properties, String prefix, String id) {
+                properties, "manual", (properties, prefix, id) ->
+            {
                 ManualControl mc = new ManualControl();
                 mc.name = properties.getProperty(prefix + "name");
                 mc.value = properties.getProperty(prefix + "value");
                 return mc;
-            }
-        });
+            });
     }
 
     protected void readPreserveList() {
         preserveList = PropertyHelper.readList(
                 properties, "preserve",
-                new PropertyHelper.PropertyReader<String>() {
-            @Override
-            public String readItem(Properties properties, String prefix, String id) {
-                return properties.getProperty(prefix + "name");
-            }
-        });
+            (properties, prefix, id) -> properties.getProperty(prefix + "name"));
     }
 
     protected void readKeysList() {
         keyList = PropertyHelper.readList(
-                properties, "keys",
-                new PropertyHelper.PropertyReader<ControlKey>() {
-                    @Override
-                    public ControlKey readItem(Properties properties, String prefix, String id) {
-                        ControlKey key = new ControlKey();
-                        key.name = properties.getProperty(prefix + "name");
-                        key.inc = KeyEventWrapper.valueOf(properties.getProperty(prefix + "inc"));
-                        key.dec = KeyEventWrapper.valueOf(properties.getProperty(prefix + "dec"));
-                        return key;
-                    }
-                });
+                properties, "keys", (properties, prefix, id) ->
+            {
+                ControlKey key = new ControlKey();
+                key.name = properties.getProperty(prefix + "name");
+                key.inc = KeyEventWrapper.valueOf(properties.getProperty(prefix + "inc"));
+                key.dec = KeyEventWrapper.valueOf(properties.getProperty(prefix + "dec"));
+                return key;
+            });
     }
 
     static class ManualControl {

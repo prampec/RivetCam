@@ -37,7 +37,7 @@ public class AppControllerImpl implements AppController, CaptureCallback
     }
 
     private int onion = 2;
-    boolean keyInfoOn = false;
+    private boolean keyInfoOn = false;
 
     private final static long snapshotDelayMs = 3000;
     private final MainFrame mainFrame;
@@ -170,6 +170,10 @@ public class AppControllerImpl implements AppController, CaptureCallback
             public void run() {
                 if (activePreviewImage == 0) {
                     tm.cancel();
+                    if (configurationManager.returnToLiveViewAfterPlayback)
+                    {
+                        liveViewMode();
+                    }
                 } else {
                     activePreviewImage -= 1;
                     mainFrame.repaintImage(true); // TODO: real time paint
