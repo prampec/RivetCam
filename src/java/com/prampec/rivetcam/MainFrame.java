@@ -74,6 +74,7 @@ public class MainFrame extends JFrame {
         finally {
 //            dialog.setVisible(false);
 //            dialog.dispose();
+            PluginManager.getInstance().shutdownPlugins();
         }
     }
 
@@ -96,6 +97,10 @@ public class MainFrame extends JFrame {
         setTitle("RivetCam");
 
         appController = new AppControllerImpl(this, configurationManager);
+
+        PluginManager.getInstance().
+            createPlugins(configurationManager, appController);
+
         appController.startCapture();
 
         this.addKeyListener(new KeyAdapter() {
@@ -113,7 +118,6 @@ public class MainFrame extends JFrame {
 
         this.setFocusable(true);
         this.requestFocusInWindow();
-
     }
 
     private void handleKeyPressed(KeyEvent e) {
@@ -179,24 +183,11 @@ public class MainFrame extends JFrame {
 
     void repaintImage()
     {
-        SwingUtilities.invokeLater(() -> imageContainer.repaint());
+        SwingUtilities.invokeLater(() -> {
+            imageContainer.repaint();
+            Toolkit.getDefaultToolkit().sync();
+        });
     }
-
-    public void repaintImage(boolean invalidate)
-    {
-        if (!invalidate)
-        {
-            repaintImage();
-        }
-        else
-        {
-            SwingUtilities.invokeLater(() -> {
-                imageContainer.invalidate();
-                imageContainer.repaint();
-            });
-        }
-    }
-
 
     public Dimension getImageDimension()
     {

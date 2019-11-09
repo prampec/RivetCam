@@ -1,7 +1,6 @@
 package com.prampec.rivetcam;
 
 import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -27,12 +26,11 @@ public class AppControllerImpl implements AppController, CaptureCallback
         "O - Onion skin", "B - New batch",
     };
 
-    private int lastImagesCacheSize;
+    private final int lastImagesCacheCapacity;
 
     private enum Mode {
         LIVE_VIEW,
         CAPTURING,
-        PREVIEW,
         PLAYBACK,
     }
 
@@ -48,7 +46,7 @@ public class AppControllerImpl implements AppController, CaptureCallback
     private Date snapshotEffectTime;
     private FileManager fileManager;
     private Map<String, Integer> savedControls;
-    private int activePreviewImage = 0;
+    private int activePreviewImageIndex = 0;
     private Mode mode = Mode.LIVE_VIEW;
     private ConfigurationManager configurationManager;
     private java.util.Timer welcomeTimer = new Timer();
@@ -56,7 +54,7 @@ public class AppControllerImpl implements AppController, CaptureCallback
     private LinkedList<BufferedImage> lastImagesCache = new LinkedList<BufferedImage>() {
         @Override
         public boolean add(BufferedImage bufferedImage) {
-            if (size() > lastImagesCacheSize) {
+            if (size() > lastImagesCacheCapacity) {
                 removeFirst();
             }
             return super.add(bufferedImage);
@@ -67,7 +65,7 @@ public class AppControllerImpl implements AppController, CaptureCallback
         MainFrame mainFrame, ConfigurationManager configurationManager)
     {
         this.configurationManager = configurationManager;
-        lastImagesCacheSize = this.configurationManager.imageCacheSize;
+        lastImagesCacheCapacity = this.configurationManager.imageCacheSize;
         fileManager = new FileManager(this.configurationManager);
 
         this.mainFrame = mainFrame;
@@ -95,11 +93,11 @@ public class AppControllerImpl implements AppController, CaptureCallback
     public void paint(Graphics g)
     {
         BufferedImage imageToShow;
-        if (cameraManager.isCapturing()) {
+        if (cameraManager.isCapturing() || (getMode() == Mode.CAPTURING)) {
             imageToShow = image;
             showImages((Graphics2D) g, imageToShow);
         } else if (lastImagesCache.size() > 0) {
-            imageToShow = lastImagesCache.get(lastImagesCache.size() - activePreviewImage - 1);
+            imageToShow = lastImagesCache.get(activePreviewImageIndex);
             showImage(g, imageToShow);
         }
         paintOsd(g);
@@ -119,6 +117,7 @@ public class AppControllerImpl implements AppController, CaptureCallback
 
     public void liveViewMode()
     {
+        setMode(Mode.LIVE_VIEW);
         SwingUtilities.invokeLater(
             () -> setLiveView(!cameraManager.isCapturing()));
     }
@@ -126,9 +125,18 @@ public class AppControllerImpl implements AppController, CaptureCallback
     @Override
     public void playbackMode()
     {
+        if (lastImagesCache.size() <= 0)
+        {
+            return; // Nothing to play back.
+        }
+        if (!setMode(Mode.PLAYBACK))
+        {
+            return;
+        }
+        this.activePreviewImageIndex = 0;
+        setLiveView(false);
         SwingUtilities.invokeLater(() ->
         {
-            setLiveView(false);
             startPlayback();
         });
     }
@@ -143,44 +151,54 @@ public class AppControllerImpl implements AppController, CaptureCallback
     }
 
     @Override
+    public void switchOnionSkin(boolean on)
+    {
+        onion = on ? 2 : 0;
+    }
+
+    @Override
     public void removeLastImage()
     {
         String removed = fileManager.removeLast();
         if (!lastImagesCache.isEmpty()) {
             lastImagesCache.removeLast(); // TODO: might want to load images to cache.
         }
-        onScreenDisplay.add("Last image (" + removed + ") removed.");
+        if (removed != null)
+        {
+            onScreenDisplay.add("Last image (" + removed + ") was removed.");
+        }
     }
 
     @Override
     public void snapshot()
     {
-        if (mode != AppControllerImpl.Mode.CAPTURING) {
-            doSnapshot();
+        if (!setMode(Mode.CAPTURING))
+        {
+            return;
         }
+        doSnapshot();
     }
 
     private void startPlayback() {
-        mode = Mode.PLAYBACK;
-        this.activePreviewImage = lastImagesCache.size()-1;
+        this.activePreviewImageIndex = 0;
         mainFrame.repaintImage();
         final Timer tm = new Timer();
+        int period = 1000 / configurationManager.playbackFps;
         tm.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (activePreviewImage == 0) {
+                if (activePreviewImageIndex == (lastImagesCache.size()-1)) {
                     tm.cancel();
                     if (configurationManager.returnToLiveViewAfterPlayback)
                     {
                         liveViewMode();
                     }
                 } else {
-                    activePreviewImage -= 1;
-                    mainFrame.repaintImage(true); // TODO: real time paint
-//                    imageContainer.paintImmediately(0, 0, imageContainer.getWidth(), imageContainer.getHeight());
+                    activePreviewImageIndex += 1;
+                    mainFrame.repaintImage();
                 }
             }
-        }, 0, 1000/configurationManager.playbackFps);
+        }, period, period);
     }
 
     private void createNewBatchIfNone() {
@@ -193,21 +211,23 @@ public class AppControllerImpl implements AppController, CaptureCallback
     public void createNewBatch() {
         String batchName = fileManager.createNewWorkingDirectory();
         onScreenDisplay.add("New batch: " + batchName);
-        activePreviewImage = 0;
+        activePreviewImageIndex = 0;
         lastImagesCache.clear();
     }
 
     @Override
     public void showNextImage()
     {
-        activePreviewImage = activePreviewImage > 0 ? activePreviewImage - 1 : 0;
+        int maxIndex = lastImagesCache.size() - 1;
+        activePreviewImageIndex = activePreviewImageIndex < maxIndex ?
+            activePreviewImageIndex + 1 : maxIndex;
         mainFrame.repaintImage();
     }
 
     @Override
     public void showPreviousImage()
     {
-        activePreviewImage = activePreviewImage < (lastImagesCache.size()-1) ? activePreviewImage + 1 : lastImagesCache.size()-1;
+        activePreviewImageIndex = activePreviewImageIndex > 0 ? activePreviewImageIndex - 1 : 0;
         mainFrame.repaintImage();
     }
 
@@ -297,7 +317,6 @@ public class AppControllerImpl implements AppController, CaptureCallback
 
     private void doSnapshot() {
         onScreenDisplay.add("capture", "Capturing...");
-        mode = Mode.CAPTURING;
         final boolean liveViewWasOn;
         if (cameraManager.isCapturing()) {
             liveViewWasOn = true;
@@ -334,11 +353,11 @@ public class AppControllerImpl implements AppController, CaptureCallback
             {
                 startCapture();
                 cameraManager.loadControls(savedControls);
-                mode = Mode.LIVE_VIEW;
+                setMode(Mode.LIVE_VIEW);
             }
             else
             {
-                mode = Mode.PLAYBACK;
+                setMode(Mode.PLAYBACK);
                 mainFrame.repaintImage();
             }
             if (configurationManager.enableBeep)
@@ -350,13 +369,29 @@ public class AppControllerImpl implements AppController, CaptureCallback
         //        this.requestFocusInWindow();
     }
 
+    private synchronized boolean setMode(Mode newMode)
+    {
+        if (this.mode == newMode)
+        {
+            System.out.println("Mode " + newMode + " was already set.");
+            return false;
+        }
+        this.mode = newMode;
+        return true;
+    }
+
+    private synchronized Mode getMode()
+    {
+        return this.mode;
+    }
+
     private void setLiveView(boolean liveView) {
         if (liveView) {
             startCapture();
         } else if (cameraManager.isCapturing()) {
             savedControls = cameraManager.saveControls();
             cameraManager.stop();
-            activePreviewImage = 0;
+            activePreviewImageIndex = lastImagesCache.size() - 1;
         }
         SwingUtilities.invokeLater(() -> mainFrame.requestFocusInWindow());
     }

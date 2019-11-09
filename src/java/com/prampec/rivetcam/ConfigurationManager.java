@@ -31,9 +31,8 @@ import com.prampec.util.PropertyHelper;
 import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * This class manages configuration for the application.
@@ -62,6 +61,7 @@ public class ConfigurationManager {
     boolean enableBeep;
     Dimension fixedWindowSize;
     boolean returnToLiveViewAfterPlayback;
+    Map<String, Properties> plugins = new LinkedHashMap<>();
 
     public ConfigurationManager() {
         properties = new Properties();
@@ -106,8 +106,69 @@ public class ConfigurationManager {
                 properties.getProperty("restartFileIndexWithNewDirectory", "False"));
         enableBeep = Boolean.parseBoolean(
                 properties.getProperty("enableBeep", "True"));
-        enableBeep = Boolean.parseBoolean(
+        returnToLiveViewAfterPlayback = Boolean.parseBoolean(
                 properties.getProperty("returnToLiveViewAfterPlayback", "False"));
+
+        plugins = getSubProperties(properties, "plugins", "plugin");
+    }
+
+    /**
+     * Returns a subset of properties, where filter values arrive from a list.
+     *
+     * @param properties The input, where we want to make a subset of.
+     * @param prefixList A property containing a list.
+     * @param prefixItems Items to search for.
+     * @return The filtered properties, where each item key is reduced by the
+     * filtered prefix organized by names.
+     */
+    public static Map<String, Properties> getSubProperties(
+        Properties properties, String prefixList, String prefixItems)
+    {
+        Map<String, Properties> result = new HashMap<>();
+        List<String> pluginNames =
+            parseList(properties.getProperty(prefixList));
+        for (String pluginName : pluginNames)
+        {
+            Properties subProperties = getSubProperties(
+                properties, prefixItems + "." + pluginName + ".");
+            result.put(pluginName, subProperties);
+        }
+        return result;
+    }
+
+    /**
+     * Returns a subset of properties based on a search query.
+     *
+     * @param properties The input, where we want to make a subset of.
+     * @param prefix Prefix to search for.
+     * @return The filtered properties, where each keys is reduced by the
+     * filtered prefix.
+     */
+    public static Properties getSubProperties(
+        Properties properties, String prefix)
+    {
+        Properties filteredProperties = new Properties();
+        for (String propertyName : properties.stringPropertyNames())
+        {
+            if (propertyName.startsWith(prefix))
+            {
+                String newPropertyName =
+                    propertyName.substring(prefix.length());
+                filteredProperties.put(
+                    newPropertyName, properties.getProperty(propertyName));
+            }
+        }
+        return filteredProperties;
+    }
+
+    public static List<String> parseList(String plugins)
+    {
+        if (plugins == null)
+        {
+            return Collections.emptyList();
+        }
+        String[] split = plugins.split("\\s*,\\s*");
+        return Arrays.asList(split);
     }
 
     private String getVideoDeviceByName(String videoDeviceName) {

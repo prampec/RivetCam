@@ -95,7 +95,7 @@ public class FileManager {
             }
             return formatName(file);
         } else {
-            return "";
+            return null;
         }
     }
 

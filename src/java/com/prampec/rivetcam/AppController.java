@@ -14,6 +14,8 @@ public interface AppController
 
     void changeOnionSkinLevel();
 
+    void switchOnionSkin(boolean on);
+
     void paint(Graphics g);
 
     void startCapture();
