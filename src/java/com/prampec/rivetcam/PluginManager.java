@@ -1,5 +1,6 @@
 package com.prampec.rivetcam;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -64,6 +65,14 @@ public class PluginManager
         for (RivetCamPlugin plugin : plugins)
         {
             plugin.shutdown();
+        }
+    }
+
+    public void batchFinished(File workingDirectory)
+    {
+        for (RivetCamPlugin plugin : plugins)
+        {
+            plugin.batchFinished(workingDirectory);
         }
     }
 }

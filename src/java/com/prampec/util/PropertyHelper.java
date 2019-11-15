@@ -42,7 +42,7 @@ public class PropertyHelper {
         if (idsString == null) {
             return Collections.emptyList();
         }
-        String[] ids = idsString.split("\\w*,\\w*");
+        String[] ids = idsString.split("\\s*,\\s*");
         List<T> result = new ArrayList<>(ids.length);
         for (String id : ids) {
             String prefix = subject + "." + id + ".";

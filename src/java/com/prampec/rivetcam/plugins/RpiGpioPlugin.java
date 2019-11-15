@@ -1,5 +1,6 @@
 package com.prampec.rivetcam.plugins;
 
+import java.io.File;
 import java.util.*;
 
 import com.pi4j.io.gpio.*;
@@ -47,6 +48,12 @@ public class RpiGpioPlugin implements RivetCamPlugin
         {
             gpio.shutdown();
         }
+    }
+
+    @Override
+    public void batchFinished(File workingDirectory)
+    {
+        // Not interested.
     }
 
     private void connectPins(Properties properties)

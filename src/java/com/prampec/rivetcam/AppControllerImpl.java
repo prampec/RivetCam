@@ -209,6 +209,10 @@ public class AppControllerImpl implements AppController, CaptureCallback
 
     @Override
     public void createNewBatch() {
+        File activeWorkingDirectory =
+            fileManager.getActiveWorkingDirectory();
+        PluginManager.getInstance().batchFinished(activeWorkingDirectory);
+
         String batchName = fileManager.createNewWorkingDirectory();
         onScreenDisplay.add("New batch: " + batchName);
         activePreviewImageIndex = 0;

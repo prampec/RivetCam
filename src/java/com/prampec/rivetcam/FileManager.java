@@ -72,6 +72,11 @@ public class FileManager {
         return  activeWorkingDirectory.getName();
     }
 
+    public File getActiveWorkingDirectory()
+    {
+        return activeWorkingDirectory;
+    }
+
     public File getNextFile() {
         File file = getFile(nextFileIndex);
         if (file.exists()) {

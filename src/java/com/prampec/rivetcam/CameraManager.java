@@ -140,6 +140,7 @@ public class CameraManager {
             try {
                 Control control = controlList.getControl(manualControl.name);
                 if (control != null) {
+                    System.out.println("Setting control '" + manualControl.name + "' to value: '" + manualControl.value + "'");
                     control.setValue(Integer.parseInt(manualControl.value));
                 }
                 else {
