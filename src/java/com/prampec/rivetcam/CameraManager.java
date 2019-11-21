@@ -35,12 +35,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * Helper class to access video camera functions.
  * <p>
  * Created by kelemenb on 6/17/17.
  */
 public class CameraManager {
+    private static final Logger logger =
+        LogManager.getLogger(CameraManager.class);
+
     private final DeviceInfo di;
     private VideoDevice videoDevice;
     private List<String> preserve;
@@ -51,7 +57,7 @@ public class CameraManager {
             String deviceFile,
             List<String> preserve,
             List<ConfigurationManager.ManualControl> manualList) {
-        System.out.println("Opening video device: " + deviceFile);
+        logger.info("Opening video device: " + deviceFile);
         videoDevice = getVideoDevice(new File(deviceFile));
         this.preserve = preserve;
         this.manualList = manualList;
@@ -60,13 +66,14 @@ public class CameraManager {
         } catch (V4L4JException e) {
             throw new IllegalStateException("Cannot get video device information.", e);
         }
-        System.out.println("Video device name: " + di.getName());
+        logger.info("Video device name: " + di.getName());
     }
 
     private static VideoDevice getVideoDevice(File file) {
         try {
             return new VideoDevice(file.getAbsolutePath());
         } catch (V4L4JException e) {
+            logger.error("Cannot instantiate V4L4J device from " + file, e);
             throw new IllegalStateException("Cannot instantiate V4L4J device from " + file, e);
         }
     }
@@ -111,7 +118,7 @@ public class CameraManager {
                 grabber.stopCapture();
             }
         } catch (StateException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
 
         grabber = null;
@@ -140,16 +147,15 @@ public class CameraManager {
             try {
                 Control control = controlList.getControl(manualControl.name);
                 if (control != null) {
-                    System.out.println("Setting control '" + manualControl.name + "' to value: '" + manualControl.value + "'");
+                    logger.info("Setting control '" + manualControl.name + "' to value: '" + manualControl.value + "'");
                     control.setValue(Integer.parseInt(manualControl.value));
                 }
                 else {
-                    System.err.println(
-                            "'" + manualControl.name + "' is defined for manual control, but camera '"
+                    logger.error("'" + manualControl.name + "' is defined for manual control, but camera '"
                             + getCameraName() + "' does not provide this control. Try running diagnostics!");
                 }
             } catch (ControlException e) {
-                e.printStackTrace();
+                logger.error(e);
             }
         }
     }
@@ -163,7 +169,7 @@ public class CameraManager {
                 addControlValueToMap(controlList, controlsToSave, controlName);
 
             } catch (ControlException e) {
-                e.printStackTrace();
+                logger.error(e);
             }
         }
 
@@ -176,7 +182,7 @@ public class CameraManager {
             for (String controlName : save.keySet()) {
                 Control control = controlList.getControl(controlName);
                 if (control == null) {
-                    System.err.println(
+                    logger.error(
                             "'" + controlName + "' is defined as a persistable control, but camera '"
                                     + getCameraName() + "' does not provide this control. Try running diagnostics!");
                     continue;
@@ -194,7 +200,7 @@ public class CameraManager {
                 control.setValue(value);
             }
         } catch (ControlException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 
@@ -206,7 +212,7 @@ public class CameraManager {
             controlsToSave.put(controlName, control.getValue());
         }
         else {
-            System.err.println(
+            logger.error(
                     "'" + controlName + "' is defined as a persistable control, but camera '"
                             + getCameraName() + "' does not provide this control. Try running diagnostics!");
         }
@@ -217,7 +223,7 @@ public class CameraManager {
         try {
             Control control = controlList.getControl(controlName);
             if (control == null) {
-                System.err.println(
+                logger.error(
                         "Trying to set control value for '" + controlName + "', but camera '"
                                 + getCameraName() + "' does not provide this control. Try running diagnostics!");
                 return -1;
@@ -233,7 +239,7 @@ public class CameraManager {
             control.setValue(value);
             return value / control.getStepValue();
         } catch (ControlException e) {
-            e.printStackTrace();
+            logger.error(e);
             return -1;
         }
     }

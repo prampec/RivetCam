@@ -5,11 +5,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * Manages plugins.
  */
 public class PluginManager
 {
+    private static final Logger logger =
+        LogManager.getLogger(PluginManager.class);
+
     protected static PluginManager instance;
     private List<RivetCamPlugin> plugins = new ArrayList<>();
 
@@ -46,16 +52,18 @@ public class PluginManager
                         pluginProperties,
                         appController);
                 plugins.add(rivetCamPlugin);
-                System.out.println("Plugin '" + pluginName + "' created.");
+                logger.info("Plugin '" + pluginName + "' created.");
             }
             catch (ClassNotFoundException e)
             {
+                logger.error(e);
                 throw new IllegalStateException(
                     "Factory '" + factoryClassName +
                         "' not found for plugin '" + pluginName + "'", e);
             }
             catch (IllegalAccessException | InstantiationException e)
             {
+                logger.error(e);
                 throw new IllegalStateException(
                     "Factory '" + factoryClassName +
                         "' cannot be created for plugin '" + pluginName + "'", e);

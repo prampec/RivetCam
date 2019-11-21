@@ -10,6 +10,9 @@ import java.util.Timer;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import au.edu.jcu.v4l4j.CaptureCallback;
 import au.edu.jcu.v4l4j.VideoFrame;
 import au.edu.jcu.v4l4j.exceptions.V4L4JException;
@@ -19,6 +22,9 @@ import au.edu.jcu.v4l4j.exceptions.V4L4JException;
  */
 public class AppControllerImpl implements AppController, CaptureCallback
 {
+    private static final Logger logger =
+        LogManager.getLogger(AppControllerImpl.class);
+
     private static final String[] KEY_INFO = {
         "Esc - Quit", "L - Live view",
         "Space - Capture", "P - Playback",
@@ -379,7 +385,7 @@ public class AppControllerImpl implements AppController, CaptureCallback
     {
         if (this.mode == newMode)
         {
-            System.out.println("Mode " + newMode + " was already set.");
+            logger.debug("Mode " + newMode + " was already set.");
             return false;
         }
         this.mode = newMode;
@@ -431,7 +437,7 @@ public class AppControllerImpl implements AppController, CaptureCallback
                     lastImagesCache.add(bufferedImage);
                     onScreenDisplay.replace("capture", "Frame saved to: " + fileManager.formatName(outputfile) );
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error(e);
                 } finally {
                     snapshotInProgress = false;
                 }
@@ -445,7 +451,7 @@ public class AppControllerImpl implements AppController, CaptureCallback
     }
 
     public void exceptionReceived(V4L4JException e) {
-        e.printStackTrace();
+       logger.error(e);
     }
 
     @Override

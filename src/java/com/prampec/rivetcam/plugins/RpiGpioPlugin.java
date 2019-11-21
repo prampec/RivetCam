@@ -3,6 +3,8 @@ package com.prampec.rivetcam.plugins;
 import java.io.File;
 import java.util.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
@@ -15,6 +17,9 @@ import com.prampec.util.PropertiesHelper;
  */
 public class RpiGpioPlugin implements RivetCamPlugin
 {
+    private static final Logger logger =
+        LogManager.getLogger(RpiGpioPlugin.class);
+
     private static final String ACTION_SNAPSHOT = "snapshot";
     private static final String ACTION_REMOVE_LAST_IMAGE =
         "removeLastImage";
@@ -79,7 +84,7 @@ public class RpiGpioPlugin implements RivetCamPlugin
                         pinProperties.getProperty("pinPullResistance"));
 
                 connectPin(gpio, raspiPin, pinPullResistance, action);
-                System.out.println(
+                logger.info(
                     "Pin " + raspiPin + " connected to " + action);
             }
             else if ("rotary".equals(pinType))
@@ -102,7 +107,7 @@ public class RpiGpioPlugin implements RivetCamPlugin
                     gpio, pinName,
                     raspiPinA, raspiPinB, raspiPinPush,
                     pinPullResistance, action);
-                System.out.println(
+                logger.info(
                     "Rotary " + pinName + " (" +
                         raspiPinA.toString() + ", " +
                         raspiPinB.toString() + ", " +
@@ -154,7 +159,7 @@ public class RpiGpioPlugin implements RivetCamPlugin
         inputA.addListener(
             (GpioPinListenerDigital) event ->
                 {
-//                    System.out.println("> Pin " + event.getPin() + " " + event.getEdge() + " while " + inputB.getName() + " is " + inputB.getState());
+//                    logger.info("> Pin " + event.getPin() + " " + event.getEdge() + " while " + inputB.getName() + " is " + inputB.getState());
                     if (inputB.isLow() &&
                         (event.getEdge() == PinEdge.RISING) &&
                         (rotaryStates.get(pinName) != ROTARY_STATE_EVENT_OCCURRED))
@@ -171,7 +176,7 @@ public class RpiGpioPlugin implements RivetCamPlugin
         inputB.addListener(
             (GpioPinListenerDigital) event ->
             {
-//                System.out.println("> Pin " + event.getPin() + " " + event.getEdge() + " while " + inputA.getName() + " is " + inputA.getState());
+//                logger.info("> Pin " + event.getPin() + " " + event.getEdge() + " while " + inputA.getName() + " is " + inputA.getState());
                 if (inputA.isLow() &&
                     (event.getEdge() == PinEdge.RISING) &&
                     (rotaryStates.get(pinName) != ROTARY_STATE_EVENT_OCCURRED))
@@ -200,7 +205,7 @@ public class RpiGpioPlugin implements RivetCamPlugin
     private void handleRotationEvent(
         String pinName, String action, RotaryEvent rotaryEvent)
     {
-        //        System.out.println(
+        //        logger.info(
         //            "Rotation on " + pinName + " (" + action + "): " + rotaryEvent);
         // TODO: utilize more control
         if (rotaryEvent == RotaryEvent.Push)
@@ -241,13 +246,13 @@ public class RpiGpioPlugin implements RivetCamPlugin
     private void handlePinEvent(
         GpioPin pin, PinState state, PinEdge edge, String action)
     {
-//        System.out.println("> Pin " + pin + ": " + edge);
+//        logger.info("> Pin " + pin + ": " + edge);
         if (state.isLow() == pin.isPullResistance(
             PinPullResistance.PULL_DOWN))
         {
             return; // Pin is in default state.
         }
-//        System.out.println("> activating action: " + action);
+//        logger.info("> activating action: " + action);
         // -- TODO: move action definitions to appController
         if (ACTION_SNAPSHOT.equals(action))
         {
@@ -269,40 +274,5 @@ public class RpiGpioPlugin implements RivetCamPlugin
         {
             throw new IllegalStateException("Unknown action '" + action + "'");
         }
-    }
-
-    public static void main(String[] args) throws InterruptedException {
-        System.out.println("<--Pi4J--> GPIO Listen Example ... started.");
-
-        // create gpio controller
-        final GpioController gpio = GpioFactory.getInstance();
-
-        // provision gpio pin #02 as an input pin with its internal pull down resistor enabled
-        final GpioPinDigitalInput myButton = gpio.provisionDigitalInputPin(
-            RaspiPin.GPIO_25, PinPullResistance.PULL_UP);
-
-        // set shutdown state for this input pin
-        myButton.setShutdownOptions(true);
-
-        // create and register gpio pin listener
-        myButton.addListener(new GpioPinListenerDigital() {
-            @Override
-            public void handleGpioPinDigitalStateChangeEvent(
-                GpioPinDigitalStateChangeEvent event) {
-                // display pin state on console
-                System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getEdge());
-            }
-        });
-
-        System.out.println(" ... complete the GPIO #02 circuit and see the listener feedback here in the console.");
-
-        // keep program running until user aborts (CTRL-C)
-        while(true) {
-            Thread.sleep(500);
-        }
-
-        // stop all GPIO activity/threads by shutting down the GPIO controller
-        // (this method will forcefully shutdown all GPIO monitoring threads and scheduled tasks)
-        // gpio.shutdown();   <--- implement this method call if you wish to terminate the Pi4J GPIO controller
     }
 }

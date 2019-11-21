@@ -32,6 +32,9 @@ import java.awt.event.*;
  * Created by kelemenb on 6/17/17.
  */
 public class MainFrame extends JFrame {
+    private static final org.apache.logging.log4j.Logger logger =
+        org.apache.logging.log4j.LogManager.getLogger(MainFrame.class);
+
     JPanel imageContainer;
     private AppController appController;
     private ConfigurationManager configurationManager;
@@ -46,13 +49,17 @@ public class MainFrame extends JFrame {
                 CameraTools.dumpDeviceInfo(args[1]);
             }
             else {
-                System.err.println("Unknown argument '" + arg + "'");
+                logger.error("Unknown argument '" + arg + "'");
             }
             System.exit(0);
         }
-        ConfigurationManager configurationManager = new ConfigurationManager();
-        MainFrame dialog = new MainFrame(configurationManager);
+
+        logger.info("Starting up.");
+
         try {
+            ConfigurationManager configurationManager = new ConfigurationManager();
+            MainFrame dialog = new MainFrame(configurationManager);
+
             if (configurationManager.fixedWindowSize == null) {
                 GraphicsDevice device =
                     GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0];
@@ -70,6 +77,10 @@ public class MainFrame extends JFrame {
                     break;
                 }
             }
+        }
+        catch (Exception e)
+        {
+            logger.error(e);
         }
         finally {
 //            dialog.setVisible(false);

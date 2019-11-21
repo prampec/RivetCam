@@ -31,11 +31,17 @@ import au.edu.jcu.v4l4j.exceptions.V4L4JException;
 import java.io.File;
 import java.util.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * V4L helper methods and diagnostics functions.
  * Created by kelemenb on 6/23/17.
  */
 public class CameraTools {
+    private static final Logger logger =
+        LogManager.getLogger(CameraTools.class);
+
     private static String v4lSysfsPath = "/sys/class/video4linux/";
 
     public static List<String> listV4LDeviceFiles() {
@@ -103,7 +109,7 @@ public class CameraTools {
             System.out.println("  Resolutions: " + getResolutions(di));
             System.out.println("  Attributes: " + getAttributes(vd.getControlList()));
         } catch (V4L4JException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 

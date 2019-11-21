@@ -34,11 +34,17 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * This class manages configuration for the application.
  * Created by kelemenb on 6/23/17.
  */
 public class ConfigurationManager {
+    private static final Logger logger =
+        LogManager.getLogger(ConfigurationManager.class);
+
     private final Properties properties;
     String videoDevice;
     List<ManualControl> manualList;
@@ -68,12 +74,12 @@ public class ConfigurationManager {
         try {
             properties.load(new FileInputStream("setup.properties"));
         } catch (IOException e) {
-            System.err.println("Error loading properties: " + e.getMessage());
+            logger.error("Error loading properties: ", e);
         }
         videoDevice = properties.getProperty("videoDevice");
         String videoDeviceByName = properties.getProperty("videoDeviceByName");
         if ((videoDevice != null) && (videoDeviceByName != null)) {
-            System.err.println(
+            logger.error(
                     "Configuration warning! Both videoDevice and videoDeviceByName are specified. Only the videoDevice will be used.");
         }
         if (videoDevice == null) {
@@ -124,7 +130,7 @@ public class ConfigurationManager {
                 }
             }
         }
-        System.err.println(
+        logger.error(
                 "videoDeviceByName configuration was set, but no device found with name: "
                         + videoDeviceName);
         return null;

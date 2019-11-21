@@ -38,6 +38,9 @@
                 <exclude name="META-INF/SUN_MICR.*"/>
                 <exclude name="META-INF/BCKEY.*"/>
             </fileset>
+            <fileset dir="src/resources">
+                <include name="log4j2.xml"/>
+            </fileset>
             <manifest>
                 <attribute name="Main-Class" value="com.prampec.rivetcam.MainFrame"/>
             </manifest>

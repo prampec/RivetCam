@@ -6,12 +6,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.prampec.rivetcam.AppController;
 import com.prampec.rivetcam.RivetCamPlugin;
 
 public class ConvertPlugin
     implements RivetCamPlugin
 {
+    private static final Logger logger =
+        LogManager.getLogger(ConvertPlugin.class);
+
     private AppController appController;
     private int fps;
     private int directoryIndexDigits;
@@ -43,7 +48,7 @@ public class ConvertPlugin
     protected void onConversionDone(File outFile)
     {
         String message = "Animation " + outFile.getName() + " was composed.";
-        System.out.println(message);
+        logger.info(message);
         appController.getOnScreenDisplay().add(message);
     }
 
@@ -94,7 +99,7 @@ public class ConvertPlugin
     {
         for (Thread thread : backgroundProcesses)
         {
-            System.out.println("Interrupting background process "
+            logger.info("Interrupting background process "
                 + thread.getName());
             thread.interrupt();
         }
@@ -102,7 +107,7 @@ public class ConvertPlugin
         {
             backgroundProcesses.removeIf(thread -> !thread.isAlive());
         }
-        System.out.println("All background processes are finished.");
+        logger.info("All background processes are finished.");
     }
 
     private static void runCmd(
@@ -113,7 +118,7 @@ public class ConvertPlugin
     private static void runCmd(
         File workingDirectory, Callback callback, String... cmdLine)
     {
-        System.out.println("Starting command in " +
+        logger.info("Starting command in " +
             workingDirectory + Arrays.toString(cmdLine));
         ProcessBuilder pb = new ProcessBuilder();
         pb.directory(workingDirectory);
@@ -122,28 +127,29 @@ public class ConvertPlugin
         {
             Process process = pb.start();
 
-            Thread thStd = startStreamReadingThread(
+            // TODO: dump stdOut, and stdErr to log4j
+            Thread thOut = startStreamReadingThread(
                 process, process.getInputStream(), System.out);
             Thread thErr = startStreamReadingThread(
                 process, process.getErrorStream(), System.err);
 
             int exitCode = process.waitFor();
-            thStd.interrupt();
+            thOut.interrupt();
             thErr.interrupt();
-            thStd.join(1000);
+            thOut.join(1000);
             thErr.join(1000);
 
             // TODO: handle errors
-            System.out.println("Command exit code = " + exitCode);
+            logger.info("Command exit code = " + exitCode);
 
             backgroundProcesses.remove(Thread.currentThread());
 
             callback.perform(exitCode);
         }
-        catch (IOException | InterruptedException ex)
+        catch (IOException | InterruptedException e)
         {
             // TODO: handle errors
-            ex.printStackTrace(System.out);
+            logger.error(e);
         }
     }
 
@@ -173,7 +179,7 @@ public class ConvertPlugin
                 }
                 catch (IOException e)
                 {
-                    e.printStackTrace();
+                    logger.error(e);
                     throw new IllegalStateException(e);
                 }
             }
