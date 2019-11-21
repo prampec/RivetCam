@@ -26,7 +26,7 @@ package com.prampec.rivetcam;
 
 import au.edu.jcu.v4l4j.DeviceInfo;
 import com.prampec.util.KeyEventWrapper;
-import com.prampec.util.PropertyHelper;
+import com.prampec.util.PropertiesHelper;
 
 import java.awt.*;
 import java.io.FileInputStream;
@@ -109,66 +109,7 @@ public class ConfigurationManager {
         returnToLiveViewAfterPlayback = Boolean.parseBoolean(
                 properties.getProperty("returnToLiveViewAfterPlayback", "False"));
 
-        plugins = getSubProperties(properties, "plugins", "plugin");
-    }
-
-    /**
-     * Returns a subset of properties, where filter values arrive from a list.
-     *
-     * @param properties The input, where we want to make a subset of.
-     * @param prefixList A property containing a list.
-     * @param prefixItems Items to search for.
-     * @return The filtered properties, where each item key is reduced by the
-     * filtered prefix organized by names.
-     */
-    public static Map<String, Properties> getSubProperties(
-        Properties properties, String prefixList, String prefixItems)
-    {
-        Map<String, Properties> result = new HashMap<>();
-        List<String> pluginNames =
-            parseList(properties.getProperty(prefixList));
-        for (String pluginName : pluginNames)
-        {
-            Properties subProperties = getSubProperties(
-                properties, prefixItems + "." + pluginName + ".");
-            result.put(pluginName, subProperties);
-        }
-        return result;
-    }
-
-    /**
-     * Returns a subset of properties based on a search query.
-     *
-     * @param properties The input, where we want to make a subset of.
-     * @param prefix Prefix to search for.
-     * @return The filtered properties, where each keys is reduced by the
-     * filtered prefix.
-     */
-    public static Properties getSubProperties(
-        Properties properties, String prefix)
-    {
-        Properties filteredProperties = new Properties();
-        for (String propertyName : properties.stringPropertyNames())
-        {
-            if (propertyName.startsWith(prefix))
-            {
-                String newPropertyName =
-                    propertyName.substring(prefix.length());
-                filteredProperties.put(
-                    newPropertyName, properties.getProperty(propertyName));
-            }
-        }
-        return filteredProperties;
-    }
-
-    public static List<String> parseList(String plugins)
-    {
-        if (plugins == null)
-        {
-            return Collections.emptyList();
-        }
-        String[] split = plugins.split("\\s*,\\s*");
-        return Arrays.asList(split);
+        plugins = PropertiesHelper.readSubProperties(properties, "plugin");
     }
 
     private String getVideoDeviceByName(String videoDeviceName) {
@@ -200,7 +141,7 @@ public class ConfigurationManager {
     }
 
     protected void readManualList() {
-        manualList = PropertyHelper.readList(
+        manualList = PropertiesHelper.readList(
                 properties, "manual", (properties, prefix, id) ->
             {
                 ManualControl mc = new ManualControl();
@@ -211,13 +152,13 @@ public class ConfigurationManager {
     }
 
     protected void readPreserveList() {
-        preserveList = PropertyHelper.readList(
+        preserveList = PropertiesHelper.readList(
                 properties, "preserve",
             (properties, prefix, id) -> properties.getProperty(prefix + "name"));
     }
 
     protected void readKeysList() {
-        keyList = PropertyHelper.readList(
+        keyList = PropertiesHelper.readList(
                 properties, "keys", (properties, prefix, id) ->
             {
                 ControlKey key = new ControlKey();
@@ -238,6 +179,8 @@ public class ConfigurationManager {
         KeyEventWrapper inc;
         KeyEventWrapper dec;
     }
+
+    ///////////////////////////////////////////////////////////////////////
 
     public String getVideoDevice()
     {

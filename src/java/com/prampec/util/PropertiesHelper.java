@@ -24,16 +24,15 @@
 
 package com.prampec.util;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Helper methods to process property files.
  * Created by kelemenb on 6/24/17.
  */
-public class PropertyHelper {
+public class PropertiesHelper
+{
+
     public static <T> List<T> readList(
             Properties properties,
             String subject,
@@ -51,6 +50,51 @@ public class PropertyHelper {
         }
         return result;
     }
+
+    public static Map<String, Properties> readSubProperties(
+        Properties properties,
+        String subject) {
+
+        Map<String, Properties> result = new HashMap<>();
+
+        readList(properties, subject, (properties1, prefix, id) ->
+        {
+            Properties subProperties =
+                getSubProperties(properties1, prefix);
+            result.put(id, subProperties);
+            return subProperties;
+        });
+
+
+        return result;
+    }
+
+    /**
+     * Returns a subset of properties based on a search query.
+     *
+     * @param properties The input, where we want to make a subset of.
+     * @param prefix Prefix to search for.
+     * @return The filtered properties, where each keys is reduced by the
+     * filtered prefix.
+     */
+    public static Properties getSubProperties(
+        Properties properties, String prefix)
+    {
+        Properties filteredProperties = new Properties();
+        for (String propertyName : properties.stringPropertyNames())
+        {
+            if (propertyName.startsWith(prefix))
+            {
+                String newPropertyName =
+                    propertyName.substring(prefix.length());
+                filteredProperties.put(
+                    newPropertyName, properties.getProperty(propertyName));
+            }
+        }
+        return filteredProperties;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
 
     public interface PropertyReader<T> {
         T readItem(Properties properties, String prefix, String id);
