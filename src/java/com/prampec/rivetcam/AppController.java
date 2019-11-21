@@ -41,4 +41,6 @@ public interface AppController
     void exit();
 
     void adjustCameraControl(String controlName, int value);
+
+    OnScreenDisplay getOnScreenDisplay();
 }

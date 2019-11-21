@@ -41,7 +41,10 @@ public class PluginManager
                 Object o = aClass.newInstance();
                 RivetCamPluginFactory factory = (RivetCamPluginFactory) o;
                 RivetCamPlugin rivetCamPlugin =
-                    factory.create(pluginProperties, appController);
+                    factory.create(
+                        config,
+                        pluginProperties,
+                        appController);
                 plugins.add(rivetCamPlugin);
                 System.out.println("Plugin '" + pluginName + "' created.");
             }

@@ -238,4 +238,109 @@ public class ConfigurationManager {
         KeyEventWrapper inc;
         KeyEventWrapper dec;
     }
+
+    public String getVideoDevice()
+    {
+        return videoDevice;
+    }
+
+    public List<ManualControl> getManualList()
+    {
+        return manualList;
+    }
+
+    public List<String> getPreserveList()
+    {
+        return preserveList;
+    }
+
+    public List<ControlKey> getKeyList()
+    {
+        return keyList;
+    }
+
+    public int getPlaybackFps()
+    {
+        return playbackFps;
+    }
+
+    public int getOsdFontSize()
+    {
+        return osdFontSize;
+    }
+
+    public Dimension getLiveViewResolution()
+    {
+        return liveViewResolution;
+    }
+
+    public Dimension getStillImageResolution()
+    {
+        return stillImageResolution;
+    }
+
+    public long getDelayMsBeforeSnapshot()
+    {
+        return delayMsBeforeSnapshot;
+    }
+
+    public int getImageCacheSize()
+    {
+        return imageCacheSize;
+    }
+
+    public float getOnionAlpha()
+    {
+        return onionAlpha;
+    }
+
+    public String getDirectoryPrefix()
+    {
+        return directoryPrefix;
+    }
+
+    public int getDirectoryIndexDigits()
+    {
+        return directoryIndexDigits;
+    }
+
+    public String getFilePrefix()
+    {
+        return filePrefix;
+    }
+
+    public String getFilePostfix()
+    {
+        return filePostfix;
+    }
+
+    public int getFileIndexDigits()
+    {
+        return fileIndexDigits;
+    }
+
+    public String getBaseDirectoryPath()
+    {
+        return baseDirectoryPath;
+    }
+
+    public boolean isRestartFileIndexWithNewDirectory()
+    {
+        return restartFileIndexWithNewDirectory;
+    }
+
+    public boolean isEnableBeep()
+    {
+        return enableBeep;
+    }
+
+    public Dimension getFixedWindowSize()
+    {
+        return fixedWindowSize;
+    }
+
+    public boolean isReturnToLiveViewAfterPlayback()
+    {
+        return returnToLiveViewAfterPlayback;
+    }
 }

@@ -7,14 +7,18 @@ import com.prampec.rivetcam.ConfigurationManager;
 import com.prampec.rivetcam.RivetCamPlugin;
 import com.prampec.rivetcam.RivetCamPluginFactory;
 
-public class RpiGpioPluginFactory implements RivetCamPluginFactory
+public class ConvertPluginFactory
+    implements RivetCamPluginFactory
 {
-    @Override
     public RivetCamPlugin create(
         ConfigurationManager config,
-        Properties properties,
+        Properties pluginProperties,
         AppController appController)
     {
-        return new RpiGpioPlugin(properties, appController);
+        return new ConvertPlugin(
+            appController,
+            config.getPlaybackFps(),
+            config.getDirectoryIndexDigits(),
+            pluginProperties.getProperty("outputFolder"));
     }
 }

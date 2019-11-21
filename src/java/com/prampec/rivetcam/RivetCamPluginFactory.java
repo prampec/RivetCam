@@ -7,5 +7,8 @@ import java.util.Properties;
  */
 public interface RivetCamPluginFactory
 {
-    RivetCamPlugin create(Properties properties, AppController appController);
+    RivetCamPlugin create(
+        ConfigurationManager config,
+        Properties pluginProperties,
+        AppController appController);
 }
