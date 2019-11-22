@@ -9,5 +9,7 @@ public interface RivetCamPlugin
 {
     void shutdown();
 
+    void frameCaptured(File imageFile);
+
     void batchFinished(File workingDirectory);
 }
