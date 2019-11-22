@@ -86,4 +86,12 @@ public class PluginManager
             plugin.batchFinished(workingDirectory);
         }
     }
+
+    public void frameSaved(File imageFile)
+    {
+        for (RivetCamPlugin plugin : plugins)
+        {
+            plugin.frameCaptured(imageFile);
+        }
+    }
 }

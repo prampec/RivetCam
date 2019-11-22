@@ -436,6 +436,7 @@ public class AppControllerImpl implements AppController, CaptureCallback
                     ImageIO.write(bufferedImage, "jpg", outputfile);
                     lastImagesCache.add(bufferedImage);
                     onScreenDisplay.replace("capture", "Frame saved to: " + fileManager.formatName(outputfile) );
+                    PluginManager.getInstance().frameSaved(outputfile);
                 } catch (IOException e) {
                     logger.error(e);
                 } finally {
