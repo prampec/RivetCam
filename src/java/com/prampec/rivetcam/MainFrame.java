@@ -66,7 +66,16 @@ public class MainFrame extends JFrame {
                 device.setFullScreenWindow(dialog);
             }
             else {
-                dialog.setPreferredSize(configurationManager.fixedWindowSize);
+                Dimension fixedWindowSize =
+                    configurationManager.fixedWindowSize;
+                if (
+                    (fixedWindowSize.height == 0) ||
+                        (fixedWindowSize.width == 0))
+                {
+                    fixedWindowSize =
+                        Toolkit.getDefaultToolkit().getScreenSize();
+                }
+                dialog.setPreferredSize(fixedWindowSize);
             }
             dialog.pack();
             dialog.setVisible(true);
